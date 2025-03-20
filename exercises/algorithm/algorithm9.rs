@@ -1,19 +1,12 @@
 use std::cmp::Ord;
-use std::default::Default;
 
-pub struct Heap<T>
-where
-    T: Default,
-{
+pub struct Heap<T> {
     count: usize,
     items: Vec<T>,
     comparator: fn(&T, &T) -> bool,
 }
 
-impl<T> Heap<T>
-where
-    T: Default,
-{
+impl<T> Heap<T> {
     pub fn new(comparator: fn(&T, &T) -> bool) -> Self {
         Self {
             count: 0,
@@ -31,18 +24,13 @@ where
     }
 
     pub fn add(&mut self, value: T) {
-        self.count += 1;
         self.items.push(value);
-        let idx = self.count - 1;
-        self.heapify_up(idx);
+        self.count += 1;
+        self.heapify_up(self.count - 1);
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
         (idx - 1) / 2
-    }
-
-    fn children_present(&self, idx: usize) -> bool {
-        self.left_child_idx(idx) < self.count
     }
 
     fn left_child_idx(&self, idx: usize) -> usize {
@@ -56,6 +44,7 @@ where
     fn smallest_child_idx(&self, idx: usize) -> usize {
         let left = self.left_child_idx(idx);
         let right = self.right_child_idx(idx);
+
         if right < self.count && (self.comparator)(&self.items[right], &self.items[left]) {
             right
         } else {
@@ -65,21 +54,21 @@ where
 
     fn heapify_up(&mut self, idx: usize) {
         let mut current = idx;
-        let mut parent = self.parent_idx(current);
-
-        while current > 0 && (self.comparator)(&self.items[current], &self.items[parent]) {
-            self.items.swap(current, parent);
-            current = parent;
-            parent = self.parent_idx(current);
+        while current > 0 {
+            let parent = self.parent_idx(current);
+            if (self.comparator)(&self.items[current], &self.items[parent]) {
+                self.items.swap(current, parent);
+                current = parent;
+            } else {
+                break;
+            }
         }
     }
 
     fn heapify_down(&mut self, idx: usize) {
         let mut current = idx;
-
-        while self.children_present(current) {
+        while self.left_child_idx(current) < self.count {
             let smallest_child = self.smallest_child_idx(current);
-
             if (self.comparator)(&self.items[smallest_child], &self.items[current]) {
                 self.items.swap(smallest_child, current);
                 current = smallest_child;
@@ -90,10 +79,7 @@ where
     }
 }
 
-impl<T> Iterator for Heap<T>
-where
-    T: Default,
-{
+impl<T> Iterator for Heap<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
@@ -103,7 +89,9 @@ where
 
         let root = self.items.swap_remove(0);
         self.count -= 1;
-        self.heapify_down(0);
+        if !self.is_empty() {
+            self.heapify_down(0);
+        }
 
         Some(root)
     }
@@ -114,7 +102,7 @@ pub struct MinHeap;
 impl MinHeap {
     pub fn new<T>() -> Heap<T>
     where
-        T: Default + Ord,
+        T: Ord,
     {
         Heap::new(|a, b| a < b)
     }
@@ -125,7 +113,7 @@ pub struct MaxHeap;
 impl MaxHeap {
     pub fn new<T>() -> Heap<T>
     where
-        T: Default + Ord,
+        T: Ord,
     {
         Heap::new(|a, b| a > b)
     }
