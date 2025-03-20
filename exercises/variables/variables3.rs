@@ -4,7 +4,8 @@
 // hint.
 
 
+
 fn main() {
-    let x: i32 = 10;
+    let x: i32 = 0;
     println!("Number {}", x);
 }
